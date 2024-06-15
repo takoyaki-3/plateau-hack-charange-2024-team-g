@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';  // 追加
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 import * as CANNON from 'cannon-es';
 
 const groundSize = 10;
@@ -11,6 +12,14 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+
+// Lights
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+directionalLight.position.set(5, 10, 7.5);
+scene.add(directionalLight);
 
 // OrbitControls
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -74,38 +83,40 @@ createWall(new THREE.Vector3(groundSize / 2, wallHeight / 2, 0), new THREE.Vecto
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-// ブロックを作成する関数
-async function createBlock(position) {
-    const loader = new OBJLoader();
-    loader.load(
-        './assets/totyou_ver2.obj',  // 読み込みたい.objファイルのパスを指定
-        function (object) {
-            console.log(object)
-            console.log('Loaded the .obj file successfully', object);
-            // Three.js block
+// オブジェクトをロードする関数
+function loadOBJModel(objUrl, mtlUrl, position) {
+    const mtlLoader = new MTLLoader();
+    mtlLoader.load(mtlUrl, (materials) => {
+        materials.preload();
+        const objLoader = new OBJLoader();
+        objLoader.setMaterials(materials);
+        objLoader.load(objUrl, (object) => {
             object.position.copy(position);
-            object.scale.set(1, 1, 1); // オブジェクトのスケールを適宜設定
+            object.scale.set(1, 1, 1); // 適切なスケールに設定
             scene.add(object);
 
-            // Cannon.js block
-            const boxShape = new CANNON.Box(new CANNON.Vec3(1, 1, 1)); // 適宜形状とサイズを設定
+            // Cannon.jsの物理ボディを作成
+            const box = new THREE.Box3().setFromObject(object);
+            const size = new THREE.Vector3();
+            box.getSize(size);
+            const boxShape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));
             const boxBody = new CANNON.Body({ mass: 1 });
             boxBody.addShape(boxShape);
-            boxBody.position.copy(position);
+            boxBody.position.copy(object.position);
             world.addBody(boxBody);
 
             // Sync Three.js and Cannon.js
             boxBody.threeMesh = object;
-        },
-        undefined,
-        function (error) {
+        }, undefined, (error) => {
             console.error('An error happened while loading the .obj file', error);
-        }
-    );
+        });
+    }, undefined, (error) => {
+        console.error('An error happened while loading the .mtl file', error);
+    });
 }
 
 // マウスクリックイベントリスナー
-async function onMouseClick(event) {
+function onMouseClick(event) {
     // マウス座標を正規化
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -116,10 +127,10 @@ async function onMouseClick(event) {
     // 地面との交差を計算
     const intersects = raycaster.intersectObject(groundMesh);
     if (intersects.length > 0) {
-        // 交差位置にブロックを作成
+        // 交差位置にオブジェクトを作成
         const intersect = intersects[0];
-        const position = new THREE.Vector3(intersect.point.x, 20, intersect.point.z); // Y座標を20に固定
-        await createBlock(position);
+        const position = new THREE.Vector3(intersect.point.x, 10, intersect.point.z); // Y座標を少し高く設定
+        loadOBJModel('./assets/totyou_ver2.obj', './assets/totyou_ver2.mtl', position);
     }
 }
 
