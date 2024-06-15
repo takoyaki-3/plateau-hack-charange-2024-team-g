@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as CANNON from 'cannon-es';
 
+const groundSize = 20;
+
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -28,20 +30,44 @@ groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
 world.addBody(groundBody);
 
 // Ground mesh
-const groundGeometry = new THREE.PlaneGeometry(100, 100);
+const groundGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
 const groundMaterialMesh = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
 const groundMesh = new THREE.Mesh(groundGeometry, groundMaterialMesh);
 groundMesh.rotation.x = -Math.PI / 2;
 scene.add(groundMesh);
 
 // XYZ軸の矢印
-const arrowSize = 5;
+const arrowSize = groundSize+10;
 const xAxis = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), arrowSize, 0xff0000);
 const yAxis = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), arrowSize, 0x00ff00);
 const zAxis = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 0), arrowSize, 0x0000ff);
 scene.add(xAxis);
 scene.add(yAxis);
 scene.add(zAxis);
+
+// 壁の作成関数
+function createWall(position, size) {
+    // Cannon.js wall
+    const wallShape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));
+    const wallBody = new CANNON.Body({ mass: 0 });
+    wallBody.addShape(wallShape);
+    wallBody.position.set(position.x, position.y, position.z);
+    world.addBody(wallBody);
+
+    // Three.js wall
+    const wallGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+    const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x888888, transparent: true, opacity: 0.5 });
+    const wallMesh = new THREE.Mesh(wallGeometry, wallMaterial);
+    wallMesh.position.set(position.x, position.y, position.z);
+    scene.add(wallMesh);
+}
+
+// 地面の周りに壁を作成
+const wallHeight = 10;
+createWall(new THREE.Vector3(0, wallHeight / 2, -groundSize/2), new THREE.Vector3(groundSize, wallHeight, 1)); // Front wall
+createWall(new THREE.Vector3(0, wallHeight / 2, groundSize/2), new THREE.Vector3(groundSize, wallHeight, 1)); // Back wall
+createWall(new THREE.Vector3(-groundSize/2, wallHeight / 2, 0), new THREE.Vector3(1, wallHeight, groundSize)); // Left wall
+createWall(new THREE.Vector3(groundSize/2, wallHeight / 2, 0), new THREE.Vector3(1, wallHeight, groundSize)); // Right wall
 
 // Raycaster
 const raycaster = new THREE.Raycaster();
@@ -81,7 +107,7 @@ function onMouseClick(event) {
     if (intersects.length > 0) {
         // 交差位置にブロックを作成
         const intersect = intersects[0];
-        const position = new THREE.Vector3(intersect.point.x, 100, intersect.point.z); // Y座標を10に固定
+        const position = new THREE.Vector3(intersect.point.x, 20, intersect.point.z); // Y座標を100に固定
         createBlock(position);
     }
 }
