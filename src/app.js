@@ -4,7 +4,7 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 import * as CANNON from 'cannon-es';
 
-const groundSize = 10;
+const groundSize = 30;
 
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
@@ -45,6 +45,8 @@ const groundMaterialMesh = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: 
 const groundMesh = new THREE.Mesh(groundGeometry, groundMaterialMesh);
 groundMesh.rotation.x = -Math.PI / 2;
 scene.add(groundMesh);
+
+console.log("Ground mesh:", groundMesh); // +追加のデバッグメッセージ
 
 // XYZ軸の矢印
 const arrowSize = groundSize + 10;
@@ -93,6 +95,12 @@ const objUrls = [
     { obj: './assets/totyou_ver2.obj', mtl: './assets/totyou_ver2.mtl' }
 ];
 
+// +属性テーブル
+const objectAttributes = {
+    './assets/tokyo_eki.obj': { type: 'building', health: 100 },
+    './assets/totyou_ver2.obj': { type: 'monument', health: 50 }
+};
+
 // ランダムにオブジェクトを選択する関数
 function getRandomObjectUrl() {
     const index = Math.floor(Math.random() * objUrls.length);
@@ -101,10 +109,15 @@ function getRandomObjectUrl() {
 
 // オブジェクトをロードする関数
 function loadOBJModel(objUrl, mtlUrl, position) {
+    console.log("Starting to load OBJ model:", objUrl, mtlUrl); // +追加のデバッグメッセージ
+
     // 既にキャッシュにあるか確認
     if (objCache[objUrl]) {
+        console.log("Using cached OBJ model:", objUrl); // +追加のデバッグメッセージ
         const object = objCache[objUrl].clone();
         object.position.copy(position);
+        object.name = objUrl; // +名前を設定
+        object.userData = objectAttributes[objUrl]; // +属性を設定
         scene.add(object);
 
         // Cannon.jsの物理ボディを作成
@@ -115,22 +128,30 @@ function loadOBJModel(objUrl, mtlUrl, position) {
         const boxBody = new CANNON.Body({ mass: 1 });
         boxBody.addShape(boxShape);
         boxBody.position.copy(object.position);
-        world.addBody(boxBody);
 
         // Sync Three.js and Cannon.js
-        boxBody.threeMesh = object;
+        boxBody.threeMesh = object; // Three.jsメッシュを設定
+        world.addBody(boxBody);
+
+        console.log('Setting up collision handler for cached body:', boxBody); // +デバッグ用のログ追加
+        setupCollisionHandler(boxBody); // +衝突ハンドラを設定
+
         return;
     }
 
     const mtlLoader = new MTLLoader();
     mtlLoader.load(mtlUrl, (materials) => {
+        console.log("MTL loaded:", mtlUrl); // +追加のデバッグメッセージ
         materials.preload();
         const objLoader = new OBJLoader();
         objLoader.setMaterials(materials);
         objLoader.load(objUrl, (object) => {
+            console.log("OBJ loaded:", objUrl); // +追加のデバッグメッセージ
             // キャッシュに保存
             objCache[objUrl] = object.clone();
             object.position.copy(position);
+            object.name = objUrl; // +名前を設定
+            object.userData = objectAttributes[objUrl]; // +属性を設定
             scene.add(object);
 
             // Cannon.jsの物理ボディを作成
@@ -141,20 +162,58 @@ function loadOBJModel(objUrl, mtlUrl, position) {
             const boxBody = new CANNON.Body({ mass: 1 });
             boxBody.addShape(boxShape);
             boxBody.position.copy(object.position);
-            world.addBody(boxBody);
 
             // Sync Three.js and Cannon.js
-            boxBody.threeMesh = object;
+            boxBody.threeMesh = object; // +Three.jsメッシュを設定
+            world.addBody(boxBody);
+
+            console.log('Setting up collision handler for new body:', boxBody); // +デバッグ用のログ追加
+            setupCollisionHandler(boxBody); // +衝突ハンドラを設定
+
         }, undefined, (error) => {
             console.error('An error happened while loading the .obj file', error);
         });
     }, undefined, (error) => {
         console.error('An error happened while loading the .mtl file', error);
+
+        // +以下追加
+        console.log("Loading OBJ without MTL file");
+
+        // エラーが発生した場合でもOBJをロードする
+        const objLoader = new OBJLoader();
+        objLoader.load(objUrl, (object) => {
+            console.log("OBJ loaded without MTL:", objUrl);
+            object.position.copy(position);
+            object.name = objUrl; // +名前を設定
+            object.userData = objectAttributes[objUrl]; // +属性を設定
+            scene.add(object);
+
+            // Cannon.jsの物理ボディを作成
+            const box = new THREE.Box3().setFromObject(object);
+            const size = new THREE.Vector3();
+            box.getSize(size);
+            const boxShape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));
+            const boxBody = new CANNON.Body({ mass: 1 });
+            boxBody.addShape(boxShape);
+            boxBody.position.copy(object.position);
+
+            // Sync Three.js and Cannon.js
+            boxBody.threeMesh = object; // +Three.jsメッシュを設定
+            world.addBody(boxBody);
+
+            console.log('Setting up collision handler for new body:', boxBody); // +デバッグ用のログ追加
+            setupCollisionHandler(boxBody); // +衝突ハンドラを設定
+
+        }, undefined, (error) => {
+            console.error('An error happened while loading the .obj file without MTL', error);
+        });
+        // +ここまで追加
     });
 }
 
 // マウスクリック時の処理
 function onMouseClick(event) {
+    console.log("Mouse clicked");  // +クリックが検知されたかを確認
     // マウス座標を正規化
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -162,18 +221,86 @@ function onMouseClick(event) {
     // Raycasterを設定
     raycaster.setFromCamera(mouse, camera);
 
+    // Raycasterの起点と方向をデバッグ出力
+    console.log("Ray origin:", raycaster.ray.origin); // +追加のデバッグメッセージ
+    console.log("Ray direction:", raycaster.ray.direction); // +追加のデバッグメッセージ
+
     // 地面との交差を計算
     const intersects = raycaster.intersectObject(groundMesh);
+    console.log("Intersects:", intersects); // 追加のデバッグメッセージ
+
     if (intersects.length > 0) {
+        console.log("Ground clicked");  // +地面がクリックされたかを確認
         // 交差位置にブロックを作成
         const intersect = intersects[0];
         const position = new THREE.Vector3(intersect.point.x, 100, intersect.point.z); // Y座標を100に固定
         const { obj, mtl } = getRandomObjectUrl(); // ランダムなオブジェクトを選択
+        console.log("Loading object:", obj, mtl);  // +ロードするオブジェクトの情報を確認
         loadOBJModel(obj, mtl, position);
     }
 }
 
 document.addEventListener('click', onMouseClick);
+
+console.log("Click event listener added"); // +追加のデバッグメッセージ
+
+// +衝突イベントのリスナーを追加
+function setupCollisionHandler(body) {
+    console.log('Setting up collision handler for body:', body); // 追加
+    body.addEventListener('collide', function(event) {
+        try {
+            const otherBody = event.body; // 衝突したもう一方の物体
+            console.log('Collision detected between:', body, 'and', otherBody);
+
+            if (body && otherBody) {
+                console.log('Both bodies exist');
+
+                const meshA = body.threeMesh;
+                const meshB = otherBody.threeMesh;
+
+                if (meshA && meshB) {
+                    const attrA = meshA.userData;
+                    const attrB = meshB.userData;
+                    console.log('Attributes:', attrA, attrB); // 属性のログ
+
+                    if (isBodyAtRest(body) && isBodyAtRest(otherBody)) {
+                        if (shouldDestroy(attrA, attrB)) {
+                            // 衝突した双方の物体を消滅させる
+                            setTimeout(() => {
+                                scene.remove(meshA);
+                                scene.remove(meshB);
+                                world.removeBody(body);
+                                world.removeBody(otherBody);
+                                console.log('Both objects destroyed:', meshA.name, meshB.name);
+                            }, 0); // 次のフレームで削除
+                        }
+                    }
+                }
+            } else {
+                console.log('One or both bodies are undefined');
+            }
+        } catch (error) {
+            console.error('Error during collision handling:', error);
+        }
+    });
+}
+
+// +物体が静止しているかどうかを判定する関数
+function isBodyAtRest(body) {
+    const velocity = body.velocity;
+    const isResting = velocity.length() < 100; // 任意の閾値、ここでは0.1以下で静止とみなす
+    console.log('Velocity:', velocity, 'Is at rest:', isResting); // 静止状態のログ
+    return isResting;
+}
+
+// +属性に基づいて物体を消滅させるかどうかを判定する関数
+function shouldDestroy(attrA, attrB) {
+    // 任意の条件で判定
+    // 例: 両方の物体が特定のタイプの場合に消滅させる
+    const shouldDestroy = attrA.type === 'building' && attrB.type === 'monument';
+    console.log('Should destroy:', shouldDestroy); // 消滅条件のログ
+    return shouldDestroy;
+}
 
 // Animation loop
 function animate() {
@@ -197,6 +324,8 @@ function animate() {
 // Set initial camera position
 camera.position.set(5, 5, 5);
 camera.lookAt(0, 0, 0);
+
+console.log("Camera position:", camera.position); // +追加のデバッグメッセージ
 
 // Start animation
 animate();
