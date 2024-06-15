@@ -43,27 +43,50 @@ scene.add(xAxis);
 scene.add(yAxis);
 scene.add(zAxis);
 
-// Block creation function
-function createBlock() {
+// Raycaster
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+// ブロックを作成する関数
+function createBlock(position) {
     // Cannon.js block
     const boxShape = new CANNON.Box(new CANNON.Vec3(1, 1, 1));
     const boxBody = new CANNON.Body({ mass: 1 });
     boxBody.addShape(boxShape);
-    boxBody.position.set(0, 50, 0);
+    boxBody.position.copy(position);
     world.addBody(boxBody);
 
     // Three.js block
     const boxGeometry = new THREE.BoxGeometry(2, 2, 2);
     const boxMaterial = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff });
     const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
+    boxMesh.position.copy(position);
     scene.add(boxMesh);
 
     // Sync Three.js and Cannon.js
     boxBody.threeMesh = boxMesh;
 }
 
-// Event listener for click
-document.addEventListener('click', createBlock);
+// マウスクリックイベントリスナー
+function onMouseClick(event) {
+    // マウス座標を正規化
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    // Raycasterを設定
+    raycaster.setFromCamera(mouse, camera);
+
+    // 地面との交差を計算
+    const intersects = raycaster.intersectObject(groundMesh);
+    if (intersects.length > 0) {
+        // 交差位置にブロックを作成
+        const intersect = intersects[0];
+        const position = new THREE.Vector3(intersect.point.x, 100, intersect.point.z); // Y座標を10に固定
+        createBlock(position);
+    }
+}
+
+document.addEventListener('click', onMouseClick);
 
 // Animation loop
 function animate() {
