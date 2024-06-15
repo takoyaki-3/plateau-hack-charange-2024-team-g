@@ -83,16 +83,42 @@ createWall(new THREE.Vector3(groundSize / 2, wallHeight / 2, 0), new THREE.Vecto
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+// オブジェクトのキャッシュ
+const objCache = {};
+const mtlCache = {};
+
 // オブジェクトをロードする関数
 function loadOBJModel(objUrl, mtlUrl, position) {
+    // 既にキャッシュにあるか確認
+    if (objCache[objUrl]) {
+        const object = objCache[objUrl].clone();
+        object.position.copy(position);
+        scene.add(object);
+
+        // Cannon.jsの物理ボディを作成
+        const box = new THREE.Box3().setFromObject(object);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+        const boxShape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));
+        const boxBody = new CANNON.Body({ mass: 1 });
+        boxBody.addShape(boxShape);
+        boxBody.position.copy(object.position);
+        world.addBody(boxBody);
+
+        // Sync Three.js and Cannon.js
+        boxBody.threeMesh = object;
+        return;
+    }
+
     const mtlLoader = new MTLLoader();
     mtlLoader.load(mtlUrl, (materials) => {
         materials.preload();
         const objLoader = new OBJLoader();
         objLoader.setMaterials(materials);
         objLoader.load(objUrl, (object) => {
+            // キャッシュに保存
+            objCache[objUrl] = object.clone();
             object.position.copy(position);
-            object.scale.set(1, 1, 1); // 適切なスケールに設定
             scene.add(object);
 
             // Cannon.jsの物理ボディを作成
@@ -115,7 +141,7 @@ function loadOBJModel(objUrl, mtlUrl, position) {
     });
 }
 
-// マウスクリックイベントリスナー
+// マウスクリック時の処理
 function onMouseClick(event) {
     // マウス座標を正規化
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -127,10 +153,10 @@ function onMouseClick(event) {
     // 地面との交差を計算
     const intersects = raycaster.intersectObject(groundMesh);
     if (intersects.length > 0) {
-        // 交差位置にオブジェクトを作成
+        // 交差位置にブロックを作成
         const intersect = intersects[0];
-        const position = new THREE.Vector3(intersect.point.x, 10, intersect.point.z); // Y座標を少し高く設定
-        loadOBJModel('./assets/totyou_ver2.obj', './assets/totyou_ver2.mtl', position);
+        const position = new THREE.Vector3(intersect.point.x, 100, intersect.point.z); // Y座標を100に固定
+        loadOBJModel('./assets/tokyo_eki.obj', './assets/tokyo_eki.mtl', position);
     }
 }
 
