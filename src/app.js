@@ -4,7 +4,7 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 import * as CANNON from 'cannon-es';
 
-const groundSize = 30;
+const groundSize = 10;
 
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
