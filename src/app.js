@@ -87,6 +87,18 @@ const mouse = new THREE.Vector2();
 const objCache = {};
 const mtlCache = {};
 
+// オブジェクトのURL配列
+const objUrls = [
+    { obj: './assets/tokyo_eki.obj', mtl: './assets/tokyo_eki.mtl' },
+    { obj: './assets/totyou_ver2.obj', mtl: './assets/totyou_ver2.mtl' }
+];
+
+// ランダムにオブジェクトを選択する関数
+function getRandomObjectUrl() {
+    const index = Math.floor(Math.random() * objUrls.length);
+    return objUrls[index];
+}
+
 // オブジェクトをロードする関数
 function loadOBJModel(objUrl, mtlUrl, position) {
     // 既にキャッシュにあるか確認
@@ -156,7 +168,8 @@ function onMouseClick(event) {
         // 交差位置にブロックを作成
         const intersect = intersects[0];
         const position = new THREE.Vector3(intersect.point.x, 100, intersect.point.z); // Y座標を100に固定
-        loadOBJModel('./assets/tokyo_eki.obj', './assets/tokyo_eki.mtl', position);
+        const { obj, mtl } = getRandomObjectUrl(); // ランダムなオブジェクトを選択
+        loadOBJModel(obj, mtl, position);
     }
 }
 
