@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';  // 追加
 import * as CANNON from 'cannon-es';
 
-const groundSize = 20;
+const groundSize = 10;
 
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
@@ -37,7 +38,7 @@ groundMesh.rotation.x = -Math.PI / 2;
 scene.add(groundMesh);
 
 // XYZ軸の矢印
-const arrowSize = groundSize+10;
+const arrowSize = groundSize + 10;
 const xAxis = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), arrowSize, 0xff0000);
 const yAxis = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), arrowSize, 0x00ff00);
 const zAxis = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 0), arrowSize, 0x0000ff);
@@ -64,37 +65,47 @@ function createWall(position, size) {
 
 // 地面の周りに壁を作成
 const wallHeight = 10;
-createWall(new THREE.Vector3(0, wallHeight / 2, -groundSize/2), new THREE.Vector3(groundSize, wallHeight, 1)); // Front wall
-createWall(new THREE.Vector3(0, wallHeight / 2, groundSize/2), new THREE.Vector3(groundSize, wallHeight, 1)); // Back wall
-createWall(new THREE.Vector3(-groundSize/2, wallHeight / 2, 0), new THREE.Vector3(1, wallHeight, groundSize)); // Left wall
-createWall(new THREE.Vector3(groundSize/2, wallHeight / 2, 0), new THREE.Vector3(1, wallHeight, groundSize)); // Right wall
+createWall(new THREE.Vector3(0, wallHeight / 2, -groundSize / 2), new THREE.Vector3(groundSize, wallHeight, 1)); // Front wall
+createWall(new THREE.Vector3(0, wallHeight / 2, groundSize / 2), new THREE.Vector3(groundSize, wallHeight, 1)); // Back wall
+createWall(new THREE.Vector3(-groundSize / 2, wallHeight / 2, 0), new THREE.Vector3(1, wallHeight, groundSize)); // Left wall
+createWall(new THREE.Vector3(groundSize / 2, wallHeight / 2, 0), new THREE.Vector3(1, wallHeight, groundSize)); // Right wall
 
 // Raycaster
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 // ブロックを作成する関数
-function createBlock(position) {
-    // Cannon.js block
-    const boxShape = new CANNON.Box(new CANNON.Vec3(1, 1, 1));
-    const boxBody = new CANNON.Body({ mass: 1 });
-    boxBody.addShape(boxShape);
-    boxBody.position.copy(position);
-    world.addBody(boxBody);
+async function createBlock(position) {
+    const loader = new OBJLoader();
+    loader.load(
+        './assets/totyou_ver2.obj',  // 読み込みたい.objファイルのパスを指定
+        function (object) {
+            console.log(object)
+            console.log('Loaded the .obj file successfully', object);
+            // Three.js block
+            object.position.copy(position);
+            object.scale.set(1, 1, 1); // オブジェクトのスケールを適宜設定
+            scene.add(object);
 
-    // Three.js block
-    const boxGeometry = new THREE.BoxGeometry(2, 2, 2);
-    const boxMaterial = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff });
-    const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
-    boxMesh.position.copy(position);
-    scene.add(boxMesh);
+            // Cannon.js block
+            const boxShape = new CANNON.Box(new CANNON.Vec3(1, 1, 1)); // 適宜形状とサイズを設定
+            const boxBody = new CANNON.Body({ mass: 1 });
+            boxBody.addShape(boxShape);
+            boxBody.position.copy(position);
+            world.addBody(boxBody);
 
-    // Sync Three.js and Cannon.js
-    boxBody.threeMesh = boxMesh;
+            // Sync Three.js and Cannon.js
+            boxBody.threeMesh = object;
+        },
+        undefined,
+        function (error) {
+            console.error('An error happened while loading the .obj file', error);
+        }
+    );
 }
 
 // マウスクリックイベントリスナー
-function onMouseClick(event) {
+async function onMouseClick(event) {
     // マウス座標を正規化
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -107,8 +118,8 @@ function onMouseClick(event) {
     if (intersects.length > 0) {
         // 交差位置にブロックを作成
         const intersect = intersects[0];
-        const position = new THREE.Vector3(intersect.point.x, 20, intersect.point.z); // Y座標を100に固定
-        createBlock(position);
+        const position = new THREE.Vector3(intersect.point.x, 20, intersect.point.z); // Y座標を20に固定
+        await createBlock(position);
     }
 }
 
@@ -117,7 +128,7 @@ document.addEventListener('click', onMouseClick);
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
-    
+
     // Update physics
     world.step(1 / 60);
 
