@@ -106,23 +106,15 @@ const mouse = new THREE.Vector2();
 const objCache = {};
 const mtlCache = {};
 
-// オブジェクトのURL配列
+// オブジェクトのURL配列と属性
 const objUrls = [
-    { obj: './assets/tokyo_eki.obj', mtl: './assets/tokyo_eki.mtl' },
-    { obj: './assets/totyou_ver2.obj', mtl: './assets/totyou_ver2.mtl' },
-    { obj: './assets/tokyo_tower.obj', mtl: './assets/tokyo_tower.mtl' },
-    { obj: './assets/bill.obj', mtl: './assets/bill.mtl' },
-    { obj: './assets/National_Stadium.obj', mtl: './assets/National_Stadium.mtl' }
+    { obj: './assets/tokyo_eki.obj', mtl: './assets/tokyo_eki.mtl', attributes: { type: 'tokyo_eki', health: 100 } },
+    { obj: './assets/totyou_ver2.obj', mtl: './assets/totyou_ver2.mtl', attributes: { type: 'totyou_ver2', health: 50 } },
+    { obj: './assets/tokyo_tower.obj', mtl: './assets/tokyo_tower.mtl', attributes: { type: 'tokyo_tower', health: 50 } },
+    { obj: './assets/bill.obj', mtl: './assets/bill.mtl', attributes: { type: 'bill', health: 100 } },
+    { obj: './assets/National_Stadium.obj', mtl: './assets/National_Stadium.mtl', attributes: { type: 'national_stadium', health: 50 } }
 ];
 
-// +属性テーブル
-const objectAttributes = {
-    './assets/tokyo_eki.obj': { type: 'building', health: 100 },
-    './assets/totyou_ver2.obj': { type: 'monument', health: 50 },
-    './assets/tokyo_tower.obj': { type: 'monument', health: 50 },
-    './assets/bill.obj': { type: 'building', health: 100 },
-    './assets/National_Stadium.obj': { type: 'monument', health: 50 }
-};
 
 // ランダムにオブジェクトを選択する関数
 function getRandomObjectUrl() {
@@ -131,7 +123,7 @@ function getRandomObjectUrl() {
 }
 
 // オブジェクトをロードする関数
-function loadOBJModel(objUrl, mtlUrl, position) {
+function loadOBJModel(objUrl, mtlUrl, position, attributes) {
     console.log("Starting to load OBJ model:", objUrl, mtlUrl); // +追加のデバッグメッセージ
 
     // 既にキャッシュにあるか確認
@@ -140,7 +132,7 @@ function loadOBJModel(objUrl, mtlUrl, position) {
         const object = objCache[objUrl].clone();
         object.position.copy(position);
         object.name = objUrl; // +名前を設定
-        object.userData = objectAttributes[objUrl]; // +属性を設定
+        object.userData = attributes; // +属性を設定
         scene.add(object);
 
         // Cannon.jsの物理ボディを作成
@@ -174,7 +166,7 @@ function loadOBJModel(objUrl, mtlUrl, position) {
             objCache[objUrl] = object.clone();
             object.position.copy(position);
             object.name = objUrl; // +名前を設定
-            object.userData = objectAttributes[objUrl]; // +属性を設定
+            object.userData = attributes; // +属性を設定
             scene.add(object);
 
             // Cannon.jsの物理ボディを作成
@@ -208,7 +200,7 @@ function loadOBJModel(objUrl, mtlUrl, position) {
             console.log("OBJ loaded without MTL:", objUrl);
             object.position.copy(position);
             object.name = objUrl; // +名前を設定
-            object.userData = objectAttributes[objUrl]; // +属性を設定
+            object.userData = attributes; // +属性を設定
             scene.add(object);
 
             // Cannon.jsの物理ボディを作成
@@ -258,9 +250,9 @@ function onMouseClick(event) {
             // 交差位置にブロックを作成
             const intersect = intersects[0];
             const position = new THREE.Vector3(intersect.point.x, 10, intersect.point.z); // Y座標を固定
-            const { obj, mtl } = getRandomObjectUrl(); // ランダムなオブジェクトを選択
+            const { obj, mtl, attributes } = getRandomObjectUrl(); // ランダムなオブジェクトを選択
             console.log("Loading object:", obj, mtl);  // +ロードするオブジェクトの情報を確認
-            loadOBJModel(obj, mtl, position);
+            loadOBJModel(obj, mtl, position, attributes);
         }
     } else if (currentState === 'MENU') {
         console.log("Starting game from menu...");
@@ -273,7 +265,7 @@ document.addEventListener('click', onMouseClick);
 
 console.log("Click event listener added"); // +追加のデバッグメッセージ
 
-// +衝突イベントのリスナーを追加
+// ++衝突イベントのリスナーを追加
 function setupCollisionHandler(body) {
     console.log('Setting up collision handler for body:', body); // 追加
     body.addEventListener('collide', function(event) {
@@ -301,6 +293,10 @@ function setupCollisionHandler(body) {
                                 world.removeBody(body);
                                 world.removeBody(otherBody);
                                 console.log('Both objects destroyed:', meshA.name, meshB.name);
+
+                                // 中間位置に新しいオブジェクトを生成
+                                createNewObjectAtMidpoint(body, otherBody);
+
                             }, 0); // 次のフレームで削除
                         }
                     }
@@ -314,6 +310,29 @@ function setupCollisionHandler(body) {
     });
 }
 
+// +新しいオブジェクトのURL配列
+const newObjectUrls = [
+    { obj: './assets/tokyo_tower.obj', mtl: './assets/tokyo_tower.mtl', attributes: { type: 'tokyo_tower', health: 50 } },
+];
+
+// +新しいオブジェクトリストからランダムにオブジェクトを選択する関数
+function getRandomNewObjectUrl() {
+    const index = Math.floor(Math.random() * newObjectUrls.length);
+    return newObjectUrls[index];
+}
+
+// +中間位置に新しいオブジェクトを生成する関数
+function createNewObjectAtMidpoint(bodyA, bodyB) {
+    const midpoint = new THREE.Vector3(
+        (bodyA.position.x + bodyB.position.x) / 2,
+        (bodyA.position.y + bodyB.position.y) / 2,
+        (bodyA.position.z + bodyB.position.z) / 2
+    );
+    const { obj, mtl, attributes } = getRandomNewObjectUrl(); // 新しいリストからランダムなオブジェクトを選択
+    console.log("Creating new object at midpoint:", obj, mtl, midpoint);  // ログを追加
+    loadOBJModel(obj, mtl, midpoint, attributes);
+}
+
 // +物体が静止しているかどうかを判定する関数
 function isBodyAtRest(body) {
     const velocity = body.velocity;
@@ -322,11 +341,11 @@ function isBodyAtRest(body) {
     return isResting;
 }
 
-// +属性に基づいて物体を消滅させるかどうかを判定する関数
+// ++属性に基づいて物体を消滅させるかどうかを判定する関数
 function shouldDestroy(attrA, attrB) {
     // 任意の条件で判定
-    // 例: 両方の物体が特定のタイプの場合に消滅させる
-    const shouldDestroy = attrA.type === 'building' && attrB.type === 'monument';
+    // 両方の物体が同じタイプの場合に消滅させる
+    const shouldDestroy = attrA.type === attrB.type;
     console.log('Should destroy:', shouldDestroy); // 消滅条件のログ
     return shouldDestroy;
 }
