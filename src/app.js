@@ -14,6 +14,8 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+let deleteMode = true;
+
 // スカイボックスを設定
 const loader = new EXRLoader();
 loader.load('./assets/back_ground.exr', function (texture) {
@@ -279,6 +281,20 @@ function onMouseClick(event) {
             const { obj, mtl, attributes } = getRandomObjectUrl(); // ランダムなオブジェクトを選択
             console.log("Loading object:", obj, mtl);  // +ロードするオブジェクトの情報を確認
             loadOBJModel(obj, mtl, position, attributes);
+            if (!deleteMode){
+                // 位置をランダムに少しずらして10個作成
+                for (let i = 0; i < 10; i++) {
+                    const offset = new THREE.Vector3(
+                        Math.random() * 10 - 5,
+                        10,
+                        Math.random() * 10 - 5
+                    );
+                    const position = intersect.point.clone().add(offset);
+                    const { obj, mtl, attributes } = getRandomObjectUrl(); // ランダムなオブジェクトを選択
+                    console.log("Loading object:", obj, mtl);  // +ロードするオブジェクトの情報を確認
+                    loadOBJModel(obj, mtl, position, attributes);
+                }
+            }
         }
     } else if (currentState === 'MENU') {
         console.log("Starting game from menu...");
@@ -317,7 +333,7 @@ function setupCollisionHandler(body) {
                     const idB = meshB.uuid;
                     const pairKey = [idA, idB].sort().join('-');
 
-                    // if (isBodyAtRest(body) && isBodyAtRest(otherBody)) {
+                    if (deleteMode) {
                         if (!collisionPairs.has(pairKey) && shouldDestroy(attrA, attrB)) {
                             // 衝突したペアを記録
                             collisionPairs.add(pairKey);
@@ -335,7 +351,7 @@ function setupCollisionHandler(body) {
 
                             }, 0); // 次のフレームで削除
                         }
-                    // }
+                    }
                 }
             } else {
                 console.log('One or both bodies are undefined');
