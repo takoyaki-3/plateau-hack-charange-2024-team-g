@@ -469,7 +469,7 @@ function showMenu() {
     startWithDeleteButton.style.transform = 'translate(-50%, -50%)';
     startWithDeleteButton.style.fontSize = '18px';
     startWithDeleteButton.style.padding = '10px 20px';
-    startWithDeleteButton.textContent = 'Start with Delete Mode';
+    startWithDeleteButton.textContent = 'スイカゲームモード';
     startWithDeleteButton.addEventListener('click', () => {
         deleteMode = true;
         startGame();
@@ -485,7 +485,7 @@ function showMenu() {
     startWithoutDeleteButton.style.transform = 'translate(-50%, -50%)';
     startWithoutDeleteButton.style.fontSize = '18px';
     startWithoutDeleteButton.style.padding = '10px 20px';
-    startWithoutDeleteButton.textContent = 'Start without Delete Mode';
+    startWithoutDeleteButton.textContent = '無限積む積むモード';
     startWithoutDeleteButton.addEventListener('click', () => {
         deleteMode = false;
         startGame();
