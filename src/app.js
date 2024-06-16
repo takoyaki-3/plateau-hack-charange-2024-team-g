@@ -148,11 +148,11 @@ const objCache = {};
 
 // オブジェクトのURL配列と属性
 const objUrls = [
-    { obj: './assets/bill.obj', mtl: './assets/bill.mtl', attributes: { type: 'bill', score: { health: 100, score_b: 5 } } },
-    { obj: './assets/tokyo_eki.obj', mtl: './assets/tokyo_eki.mtl', attributes: { type: 'tokyo_eki', score: { health: 100, score_b: 2 } } },
-    { obj: './assets/totyou_ver2.obj', mtl: './assets/totyou_ver2.mtl', attributes: { type: 'totyou_ver2', score: { health: 50, score_b: 3 } } },
-    { obj: './assets/National_Stadium.obj', mtl: './assets/National_Stadium.mtl', attributes: { type: 'national_stadium', score: { health: 50, score_b: 6 } } },
-    { obj: './assets/tokyo_tower.obj', mtl: './assets/tokyo_tower.mtl', attributes: { type: 'tokyo_tower', score: { health: 50, score_b: 4 } } }
+    { obj: './assets/bill.obj', mtl: './assets/bill.mtl', attributes: { type: 'bill', is_object: 'bill', score: { health: 100, score_b: 5 } } },
+    { obj: './assets/tokyo_eki.obj', mtl: './assets/tokyo_eki.mtl', attributes: { type: 'tokyo_eki', is_object: 'bill', score: { health: 100, score_b: 2 } } },
+    { obj: './assets/totyou_ver2.obj', mtl: './assets/totyou_ver2.mtl', attributes: { type: 'totyou_ver2', is_object: 'bill', score: { health: 50, score_b: 3 } } },
+    { obj: './assets/National_Stadium.obj', mtl: './assets/National_Stadium.mtl', attributes: { type: 'national_stadium', is_object: 'bill', score: { health: 50, score_b: 6 } } },
+    { obj: './assets/tokyo_tower.obj', mtl: './assets/tokyo_tower.mtl', attributes: { type: 'tokyo_tower', is_object: 'bill', score: { health: 50, score_b: 4 } } }
 ];
 
 // スコアの表示要素を作成
@@ -546,7 +546,8 @@ function animate() {
 
         // ゲームオーバー判定
         world.bodies.forEach(body => {
-            if (body.threeMesh && body.threeMesh.userData.type === 'building') {
+            // 動いているか判定
+            if (body.threeMesh && body.threeMesh.userData.is_object === 'bill') {
                 if (isBodyAtRest(body) && checkOverlap(body, lidMesh)) {
                     showGameOver();
                 }
