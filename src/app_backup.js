@@ -91,15 +91,9 @@ const mtlCache = {};
 
 // オブジェクトのURL配列
 const objUrls = [
-    { obj: './assets/tokyo_eki.obj', mtl: './assets/tokyo_eki.mtl' },
+//    { obj: './assets/tokyo_eki.obj', mtl: './assets/tokyo_eki.mtl' },
     { obj: './assets/totyou_ver2.obj', mtl: './assets/totyou_ver2.mtl' }
 ];
-
-// +属性テーブル
-const objectAttributes = {
-    './assets/tokyo_eki.obj': { type: 'building', health: 100 },
-    './assets/totyou_ver2.obj': { type: 'monument', health: 50 }
-};
 
 // ランダムにオブジェクトを選択する関数
 function getRandomObjectUrl() {
@@ -116,8 +110,6 @@ function loadOBJModel(objUrl, mtlUrl, position) {
         console.log("Using cached OBJ model:", objUrl); // +追加のデバッグメッセージ
         const object = objCache[objUrl].clone();
         object.position.copy(position);
-        object.name = objUrl; // +名前を設定
-        object.userData = objectAttributes[objUrl]; // +属性を設定
         scene.add(object);
 
         // Cannon.jsの物理ボディを作成
@@ -128,14 +120,10 @@ function loadOBJModel(objUrl, mtlUrl, position) {
         const boxBody = new CANNON.Body({ mass: 1 });
         boxBody.addShape(boxShape);
         boxBody.position.copy(object.position);
-
-        // Sync Three.js and Cannon.js
-        boxBody.threeMesh = object; // Three.jsメッシュを設定
         world.addBody(boxBody);
 
-        console.log('Setting up collision handler for cached body:', boxBody); // +デバッグ用のログ追加
-        setupCollisionHandler(boxBody); // +衝突ハンドラを設定
-
+        // Sync Three.js and Cannon.js
+        boxBody.threeMesh = object;
         return;
     }
 
@@ -150,8 +138,6 @@ function loadOBJModel(objUrl, mtlUrl, position) {
             // キャッシュに保存
             objCache[objUrl] = object.clone();
             object.position.copy(position);
-            object.name = objUrl; // +名前を設定
-            object.userData = objectAttributes[objUrl]; // +属性を設定
             scene.add(object);
 
             // Cannon.jsの物理ボディを作成
@@ -162,14 +148,10 @@ function loadOBJModel(objUrl, mtlUrl, position) {
             const boxBody = new CANNON.Body({ mass: 1 });
             boxBody.addShape(boxShape);
             boxBody.position.copy(object.position);
-
-            // Sync Three.js and Cannon.js
-            boxBody.threeMesh = object; // +Three.jsメッシュを設定
             world.addBody(boxBody);
 
-            console.log('Setting up collision handler for new body:', boxBody); // +デバッグ用のログ追加
-            setupCollisionHandler(boxBody); // +衝突ハンドラを設定
-
+            // Sync Three.js and Cannon.js
+            boxBody.threeMesh = object;
         }, undefined, (error) => {
             console.error('An error happened while loading the .obj file', error);
         });
@@ -184,8 +166,6 @@ function loadOBJModel(objUrl, mtlUrl, position) {
         objLoader.load(objUrl, (object) => {
             console.log("OBJ loaded without MTL:", objUrl);
             object.position.copy(position);
-            object.name = objUrl; // +名前を設定
-            object.userData = objectAttributes[objUrl]; // +属性を設定
             scene.add(object);
 
             // Cannon.jsの物理ボディを作成
@@ -196,14 +176,10 @@ function loadOBJModel(objUrl, mtlUrl, position) {
             const boxBody = new CANNON.Body({ mass: 1 });
             boxBody.addShape(boxShape);
             boxBody.position.copy(object.position);
-
-            // Sync Three.js and Cannon.js
-            boxBody.threeMesh = object; // +Three.jsメッシュを設定
             world.addBody(boxBody);
 
-            console.log('Setting up collision handler for new body:', boxBody); // +デバッグ用のログ追加
-            setupCollisionHandler(boxBody); // +衝突ハンドラを設定
-
+            // Sync Three.js and Cannon.js
+            boxBody.threeMesh = object;
         }, undefined, (error) => {
             console.error('An error happened while loading the .obj file without MTL', error);
         });
@@ -243,64 +219,6 @@ function onMouseClick(event) {
 document.addEventListener('click', onMouseClick);
 
 console.log("Click event listener added"); // +追加のデバッグメッセージ
-
-// +衝突イベントのリスナーを追加
-function setupCollisionHandler(body) {
-    console.log('Setting up collision handler for body:', body); // 追加
-    body.addEventListener('collide', function(event) {
-        try {
-            const otherBody = event.body; // 衝突したもう一方の物体
-            console.log('Collision detected between:', body, 'and', otherBody);
-
-            if (body && otherBody) {
-                console.log('Both bodies exist');
-
-                const meshA = body.threeMesh;
-                const meshB = otherBody.threeMesh;
-
-                if (meshA && meshB) {
-                    const attrA = meshA.userData;
-                    const attrB = meshB.userData;
-                    console.log('Attributes:', attrA, attrB); // 属性のログ
-
-                    if (isBodyAtRest(body) && isBodyAtRest(otherBody)) {
-                        if (shouldDestroy(attrA, attrB)) {
-                            // 衝突した双方の物体を消滅させる
-                            setTimeout(() => {
-                                scene.remove(meshA);
-                                scene.remove(meshB);
-                                world.removeBody(body);
-                                world.removeBody(otherBody);
-                                console.log('Both objects destroyed:', meshA.name, meshB.name);
-                            }, 0); // 次のフレームで削除
-                        }
-                    }
-                }
-            } else {
-                console.log('One or both bodies are undefined');
-            }
-        } catch (error) {
-            console.error('Error during collision handling:', error);
-        }
-    });
-}
-
-// +物体が静止しているかどうかを判定する関数
-function isBodyAtRest(body) {
-    const velocity = body.velocity;
-    const isResting = velocity.length() < 0.1; // 任意の閾値、ここでは0.1以下で静止とみなす
-    console.log('Velocity:', velocity, 'Is at rest:', isResting); // 静止状態のログ
-    return isResting;
-}
-
-// +属性に基づいて物体を消滅させるかどうかを判定する関数
-function shouldDestroy(attrA, attrB) {
-    // 任意の条件で判定
-    // 例: 両方の物体が特定のタイプの場合に消滅させる
-    const shouldDestroy = attrA.type === 'building' && attrB.type === 'monument';
-    console.log('Should destroy:', shouldDestroy); // 消滅条件のログ
-    return shouldDestroy;
-}
 
 // Animation loop
 function animate() {
