@@ -25,7 +25,7 @@ def copy_images(src_dir, dest_dir, image_paths):
         else:
             print(f"File {src_path} does not exist")
 
-mtl_file = './src/assets/tokyo_tower.mtl'
+mtl_file = './src/assets/National_Stadium.mtl'
 src_dir = './dist/assets.old'
 dest_dir = './src/assets'
 
