@@ -13,11 +13,14 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// 背景色を昼間の青空に設定
+scene.background = new THREE.Color(0x87CEEB); // Sky blue
+
 // Lights
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
 directionalLight.position.set(5, 10, 7.5);
 scene.add(directionalLight);
 
@@ -41,7 +44,7 @@ world.addBody(groundBody);
 
 // Ground mesh
 const groundGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
-const groundMaterialMesh = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
+const groundMaterialMesh = new THREE.MeshBasicMaterial({ color: 0x2E8B57, side: THREE.DoubleSide }); // Sea green
 const groundMesh = new THREE.Mesh(groundGeometry, groundMaterialMesh);
 groundMesh.rotation.x = -Math.PI / 2;
 scene.add(groundMesh);
@@ -66,7 +69,7 @@ function createWall(position, size) {
 
     // Three.js wall
     const wallGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
-    const wallMaterial = new THREE.MeshBasicMaterial({ color: 0xeeeeee, transparent: true, opacity: 0.1 });
+    const wallMaterial = new THREE.MeshBasicMaterial({ color: 0xB0C4DE, transparent: true, opacity: 0.5 }); // Light steel blue
     const wallMesh = new THREE.Mesh(wallGeometry, wallMaterial);
     wallMesh.position.set(position.x, position.y, position.z);
     scene.add(wallMesh);
@@ -82,7 +85,7 @@ createWall(new THREE.Vector3(groundSize / 2, wallHeight / 2, 0), new THREE.Vecto
 
 // 透明な蓋の作成（物理シミュレーションなし）
 const lidGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
-const lidMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
+const lidMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide, transparent: true, opacity: 0.3 }); // Light blue
 const lidMesh = new THREE.Mesh(lidGeometry, lidMaterial);
 lidMesh.rotation.x = Math.PI / 2;
 lidMesh.position.y = uppperWallHeight;
@@ -358,7 +361,6 @@ function showGameOver() {
     currentState = 'GAME_OVER';
     // ゲームクリア/オーバー画面の表示を追加
     // ここで結果のHTML要素を表示したり、シーンを設定したりする
-
     // ゲームオーバー画面を表示
     const gameOver = document.createElement('div');
     gameOver.style.position = 'absolute';
@@ -370,7 +372,6 @@ function showGameOver() {
     gameOver.style.fontFamily = 'Arial';
     gameOver.textContent = 'Game over';
     document.body.appendChild(gameOver);
-    
 }
 
 // Animation loop
