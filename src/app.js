@@ -291,6 +291,9 @@ document.addEventListener('click', onMouseClick);
 
 console.log("Click event listener added"); // +追加のデバッグメッセージ
 
+// 衝突したペアの記録を管理
+const collisionPairs = new Set();
+
 // ++衝突イベントのリスナーを追加
 function setupCollisionHandler(body) {
     console.log('Setting up collision handler for body:', body); // 追加
@@ -310,8 +313,15 @@ function setupCollisionHandler(body) {
                     const attrB = meshB.userData;
                     console.log('Attributes:', attrA, attrB); // 属性のログ
 
-                    if (isBodyAtRest(body) && isBodyAtRest(otherBody)) {
-                        if (shouldDestroy(attrA, attrB)) {
+                    const idA = meshA.uuid;
+                    const idB = meshB.uuid;
+                    const pairKey = [idA, idB].sort().join('-');
+
+                    // if (isBodyAtRest(body) && isBodyAtRest(otherBody)) {
+                        if (!collisionPairs.has(pairKey) && shouldDestroy(attrA, attrB)) {
+                            // 衝突したペアを記録
+                            collisionPairs.add(pairKey);
+
                             // 衝突した双方の物体を消滅させる
                             setTimeout(() => {
                                 scene.remove(meshA);
@@ -325,7 +335,7 @@ function setupCollisionHandler(body) {
 
                             }, 0); // 次のフレームで削除
                         }
-                    }
+                    // }
                 }
             } else {
                 console.log('One or both bodies are undefined');
@@ -336,25 +346,22 @@ function setupCollisionHandler(body) {
     });
 }
 
-// +新しいオブジェクトリストからランダムにオブジェクトを選択する関数
-function getRandomNewObjectUrl() {
-    const index = Math.floor(Math.random() * objUrls.length);
-    return objUrls[index];
-}
-
-// +中間位置に新しいオブジェクトを生成する関数
+// 中間位置に新しいオブジェクトを生成する関数
 function createNewObjectAtMidpoint(bodyA, bodyB) {
     const midpoint = new THREE.Vector3(
         (bodyA.position.x + bodyB.position.x) / 2,
         (bodyA.position.y + bodyB.position.y) / 2,
         (bodyA.position.z + bodyB.position.z) / 2
     );
-    const { obj, mtl, attributes } = getRandomNewObjectUrl(); // 新しいリストからランダムなオブジェクトを選択
+    // objUrlsから１ランク上のオブジェクトを選択
+    const currentIndex = objUrls.findIndex(obj => obj.obj === bodyA.threeMesh.name);
+    const nextIndex = Math.min(currentIndex + 1, objUrls.length - 1);
+    const { obj, mtl, attributes } = objUrls[nextIndex];
     console.log("Creating new object at midpoint:", obj, mtl, midpoint);  // ログを追加
     loadOBJModel(obj, mtl, midpoint, attributes);
 }
 
-// +物体が静止しているかどうかを判定する関数
+// 物体が静止しているかどうかを判定する関数
 function isBodyAtRest(body) {
     const velocity = body.velocity;
     const isResting = velocity.length() < 0.1; // 任意の閾値、ここでは0.1以下で静止とみなす
