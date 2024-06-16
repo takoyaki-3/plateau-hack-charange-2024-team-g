@@ -415,7 +415,7 @@ function createNewObjectAtMidpoint(bodyA, bodyB) {
 // 物体が静止しているかどうかを判定する関数
 function isBodyAtRest(body) {
     const velocity = body.velocity;
-    const isResting = velocity.length() < 0.1; // 任意の閾値、ここでは0.1以下で静止とみなす
+    const isResting = velocity.length() < 0.0075; // 任意の閾値、ここでは0.1以下で静止とみなす
     // console.log('Velocity:', velocity, 'Is at rest:', isResting); // 静止状態のログ
     return isResting;
 }
