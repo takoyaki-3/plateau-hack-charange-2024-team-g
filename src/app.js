@@ -102,13 +102,19 @@ const mtlCache = {};
 // オブジェクトのURL配列
 const objUrls = [
     { obj: './assets/tokyo_eki.obj', mtl: './assets/tokyo_eki.mtl' },
-    { obj: './assets/totyou_ver2.obj', mtl: './assets/totyou_ver2.mtl' }
+    { obj: './assets/totyou_ver2.obj', mtl: './assets/totyou_ver2.mtl' },
+    { obj: './assets/tokyo_tower.obj', mtl: './assets/tokyo_tower.mtl' },
+    { obj: './assets/bill.obj', mtl: './assets/bill.mtl' },
+    { obj: './assets/National_Stadium.obj', mtl: './assets/National_Stadium.mtl' }
 ];
 
 // +属性テーブル
 const objectAttributes = {
     './assets/tokyo_eki.obj': { type: 'building', health: 100 },
-    './assets/totyou_ver2.obj': { type: 'monument', health: 50 }
+    './assets/totyou_ver2.obj': { type: 'monument', health: 50 },
+    './assets/tokyo_tower.obj': { type: 'monument', health: 50 },
+    './assets/bill.obj': { type: 'building', health: 100 },
+    './assets/National_Stadium.obj': { type: 'monument', health: 50 }
 };
 
 // ランダムにオブジェクトを選択する関数
@@ -305,7 +311,7 @@ function setupCollisionHandler(body) {
 function isBodyAtRest(body) {
     const velocity = body.velocity;
     const isResting = velocity.length() < 0.1; // 任意の閾値、ここでは0.1以下で静止とみなす
-    console.log('Velocity:', velocity, 'Is at rest:', isResting); // 静止状態のログ
+    // console.log('Velocity:', velocity, 'Is at rest:', isResting); // 静止状態のログ
     return isResting;
 }
 
