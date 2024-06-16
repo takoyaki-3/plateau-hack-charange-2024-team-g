@@ -104,8 +104,8 @@ const objUrls = [
     { obj: './assets/tokyo_eki.obj', mtl: './assets/tokyo_eki.mtl' },
     { obj: './assets/totyou_ver2.obj', mtl: './assets/totyou_ver2.mtl' },
     { obj: './assets/tokyo_tower.obj', mtl: './assets/tokyo_tower.mtl' },
-    { obj: './assets/bill.obj', mtl: './assets/bill.mtl' },
-    { obj: './assets/National_Stadium.obj', mtl: './assets/National_Stadium.mtl' }
+    // { obj: './assets/bill.obj', mtl: './assets/bill.mtl' },
+    // { obj: './assets/National_Stadium.obj', mtl: './assets/National_Stadium.mtl' }
 ];
 
 // +属性テーブル
