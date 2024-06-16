@@ -4,7 +4,7 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 import * as CANNON from 'cannon-es';
 
-const groundSize = 10;
+const groundSize = 20;
 
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
@@ -66,25 +66,26 @@ function createWall(position, size) {
 
     // Three.js wall
     const wallGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
-    const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x888888, transparent: true, opacity: 0.5 });
+    const wallMaterial = new THREE.MeshBasicMaterial({ color: 0xeeeeee, transparent: true, opacity: 0.1 });
     const wallMesh = new THREE.Mesh(wallGeometry, wallMaterial);
     wallMesh.position.set(position.x, position.y, position.z);
     scene.add(wallMesh);
 }
 
 // 地面の周りに壁を作成
-const wallHeight = 5;
-createWall(new THREE.Vector3(0, wallHeight / 2, -groundSize / 2), new THREE.Vector3(groundSize, wallHeight, 1)); // Front wall
-createWall(new THREE.Vector3(0, wallHeight / 2, groundSize / 2), new THREE.Vector3(groundSize, wallHeight, 1)); // Back wall
-createWall(new THREE.Vector3(-groundSize / 2, wallHeight / 2, 0), new THREE.Vector3(1, wallHeight, groundSize)); // Left wall
-createWall(new THREE.Vector3(groundSize / 2, wallHeight / 2, 0), new THREE.Vector3(1, wallHeight, groundSize));
+const wallHeight = 15;
+const uppperWallHeight = 8;
+createWall(new THREE.Vector3(0, wallHeight / 2, -groundSize / 2), new THREE.Vector3(groundSize, wallHeight, 0.1)); // Front wall
+createWall(new THREE.Vector3(0, wallHeight / 2, groundSize / 2), new THREE.Vector3(groundSize, wallHeight, 0.1)); // Back wall
+createWall(new THREE.Vector3(-groundSize / 2, wallHeight / 2, 0), new THREE.Vector3(0.1, wallHeight, groundSize)); // Left wall
+createWall(new THREE.Vector3(groundSize / 2, wallHeight / 2, 0), new THREE.Vector3(0.1, wallHeight, groundSize));
 
 // 透明な蓋の作成（物理シミュレーションなし）
 const lidGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
-const lidMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
+const lidMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
 const lidMesh = new THREE.Mesh(lidGeometry, lidMaterial);
 lidMesh.rotation.x = Math.PI / 2;
-lidMesh.position.y = wallHeight;
+lidMesh.position.y = uppperWallHeight;
 scene.add(lidMesh);
 
 // Raycaster
