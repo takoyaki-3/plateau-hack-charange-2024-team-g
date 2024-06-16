@@ -1,7 +1,8 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
+import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as CANNON from 'cannon-es';
 
 const groundSize = 20;
@@ -13,8 +14,14 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// 背景色を昼間の青空に設定
-scene.background = new THREE.Color(0x87CEEB); // Sky blue
+// スカイボックスを設定
+const loader = new EXRLoader();
+loader.load('./assets/back_ground.exr', function (texture) {
+    texture.mapping = THREE.EquirectangularReflectionMapping;
+    scene.background = texture;
+    scene.environment = texture;
+    animate();
+});
 
 // Lights
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
