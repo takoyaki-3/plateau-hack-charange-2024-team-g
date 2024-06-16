@@ -4,7 +4,7 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 import * as CANNON from 'cannon-es';
 
-const groundSize = 10;
+const groundSize = 30;
 
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
@@ -73,7 +73,7 @@ function createWall(position, size) {
 }
 
 // 地面の周りに壁を作成
-const wallHeight = 10;
+const wallHeight = 4;
 createWall(new THREE.Vector3(0, wallHeight / 2, -groundSize / 2), new THREE.Vector3(groundSize, wallHeight, 1)); // Front wall
 createWall(new THREE.Vector3(0, wallHeight / 2, groundSize / 2), new THREE.Vector3(groundSize, wallHeight, 1)); // Back wall
 createWall(new THREE.Vector3(-groundSize / 2, wallHeight / 2, 0), new THREE.Vector3(1, wallHeight, groundSize)); // Left wall
@@ -167,9 +167,15 @@ function onMouseClick(event) {
     if (intersects.length > 0) {
         // 交差位置にブロックを作成
         const intersect = intersects[0];
-        const position = new THREE.Vector3(intersect.point.x, 100, intersect.point.z); // Y座標を100に固定
+        const position = new THREE.Vector3(intersect.point.x, 30, intersect.point.z); // Y座標を100に固定
         const { obj, mtl } = getRandomObjectUrl(); // ランダムなオブジェクトを選択
         loadOBJModel(obj, mtl, position);
+        // 位置を少しずらして１００個作成
+        for (let i = 0; i < 3; i++) {
+            const position = new THREE.Vector3(intersect.point.x + Math.random() * 5, 20, intersect.point.z + Math.random() * 5);
+            const { obj, mtl } = getRandomObjectUrl(); // ランダムなオブジェクトを選択
+            loadOBJModel(obj, mtl, position);
+        }
     }
 }
 
