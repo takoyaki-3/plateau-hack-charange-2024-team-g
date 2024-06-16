@@ -79,6 +79,14 @@ createWall(new THREE.Vector3(0, wallHeight / 2, groundSize / 2), new THREE.Vecto
 createWall(new THREE.Vector3(-groundSize / 2, wallHeight / 2, 0), new THREE.Vector3(1, wallHeight, groundSize)); // Left wall
 createWall(new THREE.Vector3(groundSize / 2, wallHeight / 2, 0), new THREE.Vector3(1, wallHeight, groundSize));
 
+// 透明な蓋の作成（物理シミュレーションなし）
+const lidGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
+const lidMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
+const lidMesh = new THREE.Mesh(lidGeometry, lidMaterial);
+lidMesh.rotation.x = Math.PI / 2;
+lidMesh.position.y = wallHeight;
+scene.add(lidMesh);
+
 // Raycaster
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -232,7 +240,7 @@ function onMouseClick(event) {
             console.log("Ground clicked");  // +地面がクリックされたかを確認
             // 交差位置にブロックを作成
             const intersect = intersects[0];
-            const position = new THREE.Vector3(intersect.point.x, 10, intersect.point.z); // Y座標を100に固定
+            const position = new THREE.Vector3(intersect.point.x, 10, intersect.point.z); // Y座標を固定
             const { obj, mtl } = getRandomObjectUrl(); // ランダムなオブジェクトを選択
             console.log("Loading object:", obj, mtl);  // +ロードするオブジェクトの情報を確認
             loadOBJModel(obj, mtl, position);
@@ -349,6 +357,19 @@ function showGameOver() {
     currentState = 'GAME_OVER';
     // ゲームクリア/オーバー画面の表示を追加
     // ここで結果のHTML要素を表示したり、シーンを設定したりする
+
+    // ゲームオーバー画面を表示
+    const gameOver = document.createElement('div');
+    gameOver.style.position = 'absolute';
+    gameOver.style.top = '50%';
+    gameOver.style.left = '50%';
+    gameOver.style.transform = 'translate(-50%, -50%)';
+    gameOver.style.color = 'white';
+    gameOver.style.fontSize = '24px';
+    gameOver.style.fontFamily = 'Arial';
+    gameOver.textContent = 'Game over';
+    document.body.appendChild(gameOver);
+    
 }
 
 // Animation loop
@@ -367,12 +388,25 @@ function animate() {
             }
         });
 
-        // ゲームオーバー・クリアの判定
-        // 建物が止まった状態で箱から溢れていたらゲームオーバー
+        // ゲームオーバー判定
+        world.bodies.forEach(body => {
+            if (body.threeMesh && body.threeMesh.userData.type === 'building') {
+                if (isBodyAtRest(body) && checkOverlap(body, lidMesh)) {
+                    showGameOver();
+                }
+            }
+        });
     }
 
     controls.update();
     renderer.render(scene, camera);
+}
+
+// 衝突判定
+function checkOverlap(bodyA, meshB) {
+    const boxA = new THREE.Box3().setFromObject(bodyA.threeMesh);
+    const boxB = new THREE.Box3().setFromObject(meshB);
+    return boxA.intersectsBox(boxB);
 }
 
 // Set initial camera position
