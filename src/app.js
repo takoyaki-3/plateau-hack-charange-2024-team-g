@@ -302,9 +302,15 @@ function shouldDestroy(attrA, attrB) {
     return shouldDestroy;
 }
 
+// +ゲームの制限時間とスコア
+let startTime, isGameOver, score;
+const gameDuration = 10;  // 例として10秒の制限時間を設定
+
 // Animation loop
 function animate() {
-    requestAnimationFrame(animate);
+    if (!isGameOver) {
+        requestAnimationFrame(animate);
+    }
 
     // Update physics
     world.step(1 / 60);
@@ -319,6 +325,53 @@ function animate() {
 
     controls.update();
     renderer.render(scene, camera);
+
+    checkGameOver();
+}
+
+// startGame関数をグローバルに定義
+function startGame() {
+    startTime = Date.now();
+    isGameOver = false;
+    score = 0;
+    const gameOverElement = document.getElementById('game-over');
+    const resultElement = document.getElementById('result');
+    const timerElement = document.getElementById('timer');
+    
+    if (gameOverElement) gameOverElement.style.display = 'none';
+    if (resultElement) resultElement.style.display = 'none';
+    if (timerElement) {
+        timerElement.textContent = `Time Left: ${gameDuration}`;
+    } else {
+        console.error('Timer element not found');
+    }
+    animate();  // animate()関数をここで呼び出す
+}
+
+// checkGameOver関数をグローバルに定義
+function checkGameOver() {
+    const elapsedTime = (Date.now() - startTime) / 1000;
+    const timeLeft = Math.max(0, gameDuration - elapsedTime);
+    const timerElement = document.getElementById('timer');
+    const gameOverElement = document.getElementById('game-over');
+    const resultElement = document.getElementById('result');
+    
+    if (timerElement) {
+        timerElement.textContent = `Time Left: ${timeLeft.toFixed(1)}`;
+    } else {
+        console.error('Timer element not found', document.body.innerHTML);
+    }
+
+    if (!isGameOver && timeLeft <= 0) {
+        isGameOver = true;
+        if (gameOverElement) gameOverElement.style.display = 'block';
+        if (resultElement) {
+            resultElement.textContent = `Score: ${score}`;
+            resultElement.style.display = 'block';
+        } else {
+            console.error('Timer element not found', document.body.innerHTML);
+        }
+    }
 }
 
 // Set initial camera position
@@ -327,5 +380,11 @@ camera.lookAt(0, 0, 0);
 
 console.log("Camera position:", camera.position); // +追加のデバッグメッセージ
 
-// Start animation
-animate();
+document.addEventListener('DOMContentLoaded', (event) => {
+    console.log('DOMContentLoaded event fired');
+    // ゲーム開始
+    startGame();
+});
+
+//ゲームの開始
+window.onload = startGame;

@@ -7,9 +7,27 @@
     <style>
         body { margin: 0; }
         canvas { display: block; }
+        #timer, #game-over, #result {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #game-over, #result {
+            display: none;
+            top: 50%;
+        }
     </style>
 </head>
 <body>
+    <div id="timer">Time Left: 0</div>
+    <div id="game-over" style="display: none;">Game Over</div>
+    <div id="result" style="display: none;">Score: 0</div>
     <script src="bundle.js"></script>
 </body>
 </html>
