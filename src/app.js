@@ -107,11 +107,11 @@ const objCache = {};
 
 // オブジェクトのURL配列と属性
 const objUrls = [
+    { obj: './assets/bill.obj', mtl: './assets/bill.mtl', attributes: { type: 'bill', score: { health: 100, score_b: 5 } } },
     { obj: './assets/tokyo_eki.obj', mtl: './assets/tokyo_eki.mtl', attributes: { type: 'tokyo_eki', score: { health: 100, score_b: 2 } } },
     { obj: './assets/totyou_ver2.obj', mtl: './assets/totyou_ver2.mtl', attributes: { type: 'totyou_ver2', score: { health: 50, score_b: 3 } } },
-    { obj: './assets/tokyo_tower.obj', mtl: './assets/tokyo_tower.mtl', attributes: { type: 'tokyo_tower', score: { health: 50, score_b: 4 } } },
-    { obj: './assets/bill.obj', mtl: './assets/bill.mtl', attributes: { type: 'bill', score: { health: 100, score_b: 5 } } },
-    { obj: './assets/National_Stadium.obj', mtl: './assets/National_Stadium.mtl', attributes: { type: 'national_stadium', score: { health: 50, score_b: 6 } } }
+    { obj: './assets/National_Stadium.obj', mtl: './assets/National_Stadium.mtl', attributes: { type: 'national_stadium', score: { health: 50, score_b: 6 } } },
+    { obj: './assets/tokyo_tower.obj', mtl: './assets/tokyo_tower.mtl', attributes: { type: 'tokyo_tower', score: { health: 50, score_b: 4 } } }
 ];
 
 // スコアの表示要素を作成
@@ -135,7 +135,7 @@ function updateScore(score) {
 
 // ランダムにオブジェクトを選択する関数
 function getRandomObjectUrl() {
-    const index = Math.floor(Math.random() * objUrls.length);
+    const index = Math.floor(Math.random() * (objUrls.length-2));
     return objUrls[index];
 }
 
