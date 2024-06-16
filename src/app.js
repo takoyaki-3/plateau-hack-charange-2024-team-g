@@ -104,17 +104,34 @@ const mouse = new THREE.Vector2();
 
 // オブジェクトのキャッシュ
 const objCache = {};
-const mtlCache = {};
 
 // オブジェクトのURL配列と属性
 const objUrls = [
-    { obj: './assets/tokyo_eki.obj', mtl: './assets/tokyo_eki.mtl', attributes: { type: 'tokyo_eki', health: 100 } },
-    { obj: './assets/totyou_ver2.obj', mtl: './assets/totyou_ver2.mtl', attributes: { type: 'totyou_ver2', health: 50 } },
-    { obj: './assets/tokyo_tower.obj', mtl: './assets/tokyo_tower.mtl', attributes: { type: 'tokyo_tower', health: 50 } },
-    { obj: './assets/bill.obj', mtl: './assets/bill.mtl', attributes: { type: 'bill', health: 100 } },
-    { obj: './assets/National_Stadium.obj', mtl: './assets/National_Stadium.mtl', attributes: { type: 'national_stadium', health: 50 } }
+    { obj: './assets/tokyo_eki.obj', mtl: './assets/tokyo_eki.mtl', attributes: { type: 'tokyo_eki', score: { health: 100, score_b: 2 } } },
+    { obj: './assets/totyou_ver2.obj', mtl: './assets/totyou_ver2.mtl', attributes: { type: 'totyou_ver2', score: { health: 50, score_b: 3 } } },
+    { obj: './assets/tokyo_tower.obj', mtl: './assets/tokyo_tower.mtl', attributes: { type: 'tokyo_tower', score: { health: 50, score_b: 4 } } },
+    { obj: './assets/bill.obj', mtl: './assets/bill.mtl', attributes: { type: 'bill', score: { health: 100, score_b: 5 } } },
+    { obj: './assets/National_Stadium.obj', mtl: './assets/National_Stadium.mtl', attributes: { type: 'national_stadium', score: { health: 50, score_b: 6 } } }
 ];
 
+// スコアの表示要素を作成
+const scoreElement = document.createElement('div');
+scoreElement.style.position = 'absolute';
+scoreElement.style.top = '10px';
+scoreElement.style.right = '10px';
+scoreElement.style.color = 'white';
+scoreElement.style.fontSize = '24px';
+scoreElement.style.fontFamily = 'Arial';
+scoreElement.textContent = 'Score: 0';
+document.body.appendChild(scoreElement);
+
+let totalScore = 0;
+
+// スコアを更新する関数
+function updateScore(score) {
+    totalScore += score;
+    scoreElement.textContent = 'Score: ' + totalScore;
+}
 
 // ランダムにオブジェクトを選択する関数
 function getRandomObjectUrl() {
@@ -151,6 +168,9 @@ function loadOBJModel(objUrl, mtlUrl, position, attributes) {
         console.log('Setting up collision handler for cached body:', boxBody); // +デバッグ用のログ追加
         setupCollisionHandler(boxBody); // +衝突ハンドラを設定
 
+        // スコアを更新
+        updateScore(attributes.score.health);
+
         return;
     }
 
@@ -185,6 +205,9 @@ function loadOBJModel(objUrl, mtlUrl, position, attributes) {
             console.log('Setting up collision handler for new body:', boxBody); // +デバッグ用のログ追加
             setupCollisionHandler(boxBody); // +衝突ハンドラを設定
 
+            // スコアを更新
+            updateScore(attributes.score.health);
+
         }, undefined, (error) => {
             console.error('An error happened while loading the .obj file', error);
         });
@@ -218,6 +241,9 @@ function loadOBJModel(objUrl, mtlUrl, position, attributes) {
 
             console.log('Setting up collision handler for new body:', boxBody); // +デバッグ用のログ追加
             setupCollisionHandler(boxBody); // +衝突ハンドラを設定
+
+            // スコアを更新
+            updateScore(attributes.score.health);
 
         }, undefined, (error) => {
             console.error('An error happened while loading the .obj file without MTL', error);
@@ -310,15 +336,10 @@ function setupCollisionHandler(body) {
     });
 }
 
-// +新しいオブジェクトのURL配列
-const newObjectUrls = [
-    { obj: './assets/tokyo_tower.obj', mtl: './assets/tokyo_tower.mtl', attributes: { type: 'tokyo_tower', health: 50 } },
-];
-
 // +新しいオブジェクトリストからランダムにオブジェクトを選択する関数
 function getRandomNewObjectUrl() {
-    const index = Math.floor(Math.random() * newObjectUrls.length);
-    return newObjectUrls[index];
+    const index = Math.floor(Math.random() * objUrls.length);
+    return objUrls[index];
 }
 
 // +中間位置に新しいオブジェクトを生成する関数
@@ -361,6 +382,7 @@ function showMenu() {
 
     // タイトル画面を表示
     const title = document.createElement('div');
+    title.id = 'title';
     title.style.position = 'absolute';
     title.style.top = '50%';
     title.style.left = '50%';
@@ -378,8 +400,8 @@ function startGame() {
     currentState = 'PLAYING';
     // ゲームプレイの初期化
 
-    // title要素を削除
-    const title = document.querySelector('div');
+    // idがtitleの要素を削除
+    const title = document.querySelector('#title');
     if (title) {
         title.remove();
     }
