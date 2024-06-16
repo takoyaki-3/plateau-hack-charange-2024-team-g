@@ -110,11 +110,11 @@ const objUrls = [
 
 // +属性テーブル
 const objectAttributes = {
-    './assets/tokyo_eki.obj': { type: 'building', health: 100 },
-    './assets/totyou_ver2.obj': { type: 'monument', health: 50 },
-    './assets/tokyo_tower.obj': { type: 'monument', health: 50 },
-    './assets/bill.obj': { type: 'building', health: 100 },
-    './assets/National_Stadium.obj': { type: 'monument', health: 50 }
+    './assets/tokyo_eki.obj': { type: 'tokyo_eki', health: 100 },
+    './assets/totyou_ver2.obj': { type: 'totyou', health: 50 },
+    './assets/tokyo_tower.obj': { type: 'tokyo_tower', health: 50 },
+    './assets/bill.obj': { type: 'bill', health: 100 },
+    './assets/National_Stadium.obj': { type: 'national_stadium', health: 50 }
 };
 
 // ランダムにオブジェクトを選択する関数
@@ -266,7 +266,7 @@ document.addEventListener('click', onMouseClick);
 
 console.log("Click event listener added"); // +追加のデバッグメッセージ
 
-// +衝突イベントのリスナーを追加
+// ++衝突イベントのリスナーを追加
 function setupCollisionHandler(body) {
     console.log('Setting up collision handler for body:', body); // 追加
     body.addEventListener('collide', function(event) {
@@ -294,6 +294,10 @@ function setupCollisionHandler(body) {
                                 world.removeBody(body);
                                 world.removeBody(otherBody);
                                 console.log('Both objects destroyed:', meshA.name, meshB.name);
+
+                                // 中間位置に新しいオブジェクトを生成
+                                createNewObjectAtMidpoint(body, otherBody);
+
                             }, 0); // 次のフレームで削除
                         }
                     }
@@ -307,6 +311,34 @@ function setupCollisionHandler(body) {
     });
 }
 
+// +新しいオブジェクトのURL配列
+const newObjectUrls = [
+    { obj: './assets/tokyo_tower.obj', mtl: './assets/tokyo_tower.mtl' },
+];
+
+// +属性テーブル
+const newobjectAttributes = {
+    './assets/tokyo_tower.obj': { type: 'tokyo_tower', health: 50 },
+};
+
+// +新しいオブジェクトリストからランダムにオブジェクトを選択する関数
+function getRandomNewObjectUrl() {
+    const index = Math.floor(Math.random() * newObjectUrls.length);
+    return newObjectUrls[index];
+}
+
+// +中間位置に新しいオブジェクトを生成する関数
+function createNewObjectAtMidpoint(bodyA, bodyB) {
+    const midpoint = new THREE.Vector3(
+        (bodyA.position.x + bodyB.position.x) / 2,
+        (bodyA.position.y + bodyB.position.y) / 2,
+        (bodyA.position.z + bodyB.position.z) / 2
+    );
+    const { obj, mtl } = getRandomNewObjectUrl(); // 新しいリストからランダムなオブジェクトを選択
+    console.log("Creating new object at midpoint:", obj, mtl, midpoint);  // ログを追加
+    loadOBJModel(obj, mtl, midpoint);
+}
+
 // +物体が静止しているかどうかを判定する関数
 function isBodyAtRest(body) {
     const velocity = body.velocity;
@@ -315,11 +347,11 @@ function isBodyAtRest(body) {
     return isResting;
 }
 
-// +属性に基づいて物体を消滅させるかどうかを判定する関数
+// ++属性に基づいて物体を消滅させるかどうかを判定する関数
 function shouldDestroy(attrA, attrB) {
     // 任意の条件で判定
-    // 例: 両方の物体が特定のタイプの場合に消滅させる
-    const shouldDestroy = attrA.type === 'building' && attrB.type === 'monument';
+    // 両方の物体が同じタイプの場合に消滅させる
+    const shouldDestroy = attrA.type === attrB.type;
     console.log('Should destroy:', shouldDestroy); // 消滅条件のログ
     return shouldDestroy;
 }
