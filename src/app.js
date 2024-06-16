@@ -296,10 +296,6 @@ function onMouseClick(event) {
                 }
             }
         }
-    } else if (currentState === 'MENU') {
-        console.log("Starting game from menu...");
-        // ゲームプレイ画面に移行
-        startGame();
     }
 }
 
@@ -413,8 +409,40 @@ function showMenu() {
     title.style.color = 'white';
     title.style.fontSize = '24px';
     title.style.fontFamily = 'Arial';
-    title.textContent = 'Click to start';
+    title.textContent = 'Choose your mode';
     document.body.appendChild(title);
+
+    // deleteModeありのスタートボタン
+    const startWithDeleteButton = document.createElement('button');
+    startWithDeleteButton.id = 'button1';
+    startWithDeleteButton.style.position = 'absolute';
+    startWithDeleteButton.style.top = '60%';
+    startWithDeleteButton.style.left = '40%';
+    startWithDeleteButton.style.transform = 'translate(-50%, -50%)';
+    startWithDeleteButton.style.fontSize = '18px';
+    startWithDeleteButton.style.padding = '10px 20px';
+    startWithDeleteButton.textContent = 'Start with Delete Mode';
+    startWithDeleteButton.addEventListener('click', () => {
+        deleteMode = true;
+        startGame();
+    });
+    document.body.appendChild(startWithDeleteButton);
+
+    // deleteModeなしのスタートボタン
+    const startWithoutDeleteButton = document.createElement('button');
+    startWithoutDeleteButton.id = 'button2';
+    startWithoutDeleteButton.style.position = 'absolute';
+    startWithoutDeleteButton.style.top = '60%';
+    startWithoutDeleteButton.style.left = '60%';
+    startWithoutDeleteButton.style.transform = 'translate(-50%, -50%)';
+    startWithoutDeleteButton.style.fontSize = '18px';
+    startWithoutDeleteButton.style.padding = '10px 20px';
+    startWithoutDeleteButton.textContent = 'Start without Delete Mode';
+    startWithoutDeleteButton.addEventListener('click', () => {
+        deleteMode = false;
+        startGame();
+    });
+    document.body.appendChild(startWithoutDeleteButton);
 }
 
 // ゲームプレイ画面の関数
@@ -427,6 +455,16 @@ function startGame() {
     const title = document.querySelector('#title');
     if (title) {
         title.remove();
+    }
+
+    // ボタンの要素を削除
+    const startWithDeleteButton = document.querySelector('#button1');
+    if (startWithDeleteButton) {
+        startWithDeleteButton.remove();
+    }
+    const startWithoutDeleteButton = document.querySelector('#button2');
+    if (startWithoutDeleteButton) {
+        startWithoutDeleteButton.remove();
     }
 
     // オブジェクトの生成や物理エンジンのリセットなどを行う
