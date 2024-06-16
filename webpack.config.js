@@ -1,4 +1,5 @@
 const path = require('path');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     entry: './src/app.js',
@@ -25,5 +26,12 @@ module.exports = {
         port: 9000,
         open: true
     },
+    plugins: [
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: 'src/index.html', to: 'dist/index.html' }
+            ]
+        })
+    ],
     mode: 'development'
 };
