@@ -23,6 +23,42 @@ loader.load('./assets/back_ground.exr', function (texture) {
     animate();
 });
 
+// 灰色のマテリアルを定義
+const greyMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
+
+function loadAndRepeatCityModelGrid(objPath, startPosition, repeatX, repeatZ, distanceX, distanceZ) {
+    const objLoader = new OBJLoader();
+    objLoader.load(objPath, originalObject => {
+        originalObject.traverse(child => {
+            if (child.isMesh) {
+                child.material = greyMaterial; // メッシュに灰色のマテリアルを適用
+            }
+        });
+        // X軸とZ軸に沿ってモデルをリピート配置
+        for (let i = 0; i < repeatX; i++) {
+            for (let j = 0; j < repeatZ; j++) {
+                const object = originalObject.clone();
+                const posX = startPosition.x + i * distanceX;
+                const posZ = startPosition.z + j * distanceZ;
+                object.position.set(posX, startPosition.y, posZ);
+                object.scale.set(10, 10, 10); // サイズ調整が必要な場合
+                scene.add(object);
+            }
+        }
+        console.log('City models added to the scene in a grid pattern on X and Z axes');
+    });
+}
+
+// 街のモデルをX軸とZ軸のグリッド配置
+loadAndRepeatCityModelGrid(
+    './assets/city_model.obj',
+    new THREE.Vector3(-10, 0, -10), // 初期位置
+    3, // X軸のリピート回数
+    3, // Z軸のリピート回数
+    10, // X軸の距離
+    10  // Z軸の距離
+);
+
 // Lights
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambientLight);
