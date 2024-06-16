@@ -106,15 +106,6 @@ const groundMesh = new THREE.Mesh(groundGeometry, groundMaterialMesh);
 groundMesh.rotation.x = -Math.PI / 2;
 scene.add(groundMesh);
 
-// XYZ軸の矢印
-const arrowSize = groundSize + 10;
-const xAxis = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), arrowSize, 0xff0000);
-const yAxis = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), arrowSize, 0x00ff00);
-const zAxis = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 0), arrowSize, 0x0000ff);
-scene.add(xAxis);
-scene.add(yAxis);
-scene.add(zAxis);
-
 // 壁の作成関数
 function createWall(position, size) {
     // Cannon.js wall
