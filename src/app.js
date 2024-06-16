@@ -521,7 +521,7 @@ function showGameOver() {
     gameOver.style.top = '50%';
     gameOver.style.left = '50%';
     gameOver.style.transform = 'translate(-50%, -50%)';
-    gameOver.style.color = 'white';
+    gameOver.style.color = 'pink';
     gameOver.style.fontSize = '24px';
     gameOver.style.fontFamily = 'Arial';
     gameOver.textContent = 'Game over';
