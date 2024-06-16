@@ -46,8 +46,6 @@ const groundMesh = new THREE.Mesh(groundGeometry, groundMaterialMesh);
 groundMesh.rotation.x = -Math.PI / 2;
 scene.add(groundMesh);
 
-console.log("Ground mesh:", groundMesh); // +追加のデバッグメッセージ
-
 // XYZ軸の矢印
 const arrowSize = groundSize + 10;
 const xAxis = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), arrowSize, 0xff0000);
@@ -75,11 +73,19 @@ function createWall(position, size) {
 }
 
 // 地面の周りに壁を作成
-const wallHeight = 10;
+const wallHeight = 5;
 createWall(new THREE.Vector3(0, wallHeight / 2, -groundSize / 2), new THREE.Vector3(groundSize, wallHeight, 1)); // Front wall
 createWall(new THREE.Vector3(0, wallHeight / 2, groundSize / 2), new THREE.Vector3(groundSize, wallHeight, 1)); // Back wall
 createWall(new THREE.Vector3(-groundSize / 2, wallHeight / 2, 0), new THREE.Vector3(1, wallHeight, groundSize)); // Left wall
-createWall(new THREE.Vector3(groundSize / 2, wallHeight / 2, 0), new THREE.Vector3(1, wallHeight, groundSize)); // Right wall
+createWall(new THREE.Vector3(groundSize / 2, wallHeight / 2, 0), new THREE.Vector3(1, wallHeight, groundSize));
+
+// 透明な蓋の作成（物理シミュレーションなし）
+const lidGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
+const lidMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
+const lidMesh = new THREE.Mesh(lidGeometry, lidMaterial);
+lidMesh.rotation.x = Math.PI / 2;
+lidMesh.position.y = wallHeight;
+scene.add(lidMesh);
 
 // Raycaster
 const raycaster = new THREE.Raycaster();
@@ -213,30 +219,36 @@ function loadOBJModel(objUrl, mtlUrl, position) {
 
 // マウスクリック時の処理
 function onMouseClick(event) {
-    console.log("Mouse clicked");  // +クリックが検知されたかを確認
-    // マウス座標を正規化
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    if (currentState === 'PLAYING') {
+        console.log("Mouse clicked");  // +クリックが検知されたかを確認
+        // マウス座標を正規化
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-    // Raycasterを設定
-    raycaster.setFromCamera(mouse, camera);
+        // Raycasterを設定
+        raycaster.setFromCamera(mouse, camera);
 
-    // Raycasterの起点と方向をデバッグ出力
-    console.log("Ray origin:", raycaster.ray.origin); // +追加のデバッグメッセージ
-    console.log("Ray direction:", raycaster.ray.direction); // +追加のデバッグメッセージ
+        // Raycasterの起点と方向をデバッグ出力
+        console.log("Ray origin:", raycaster.ray.origin); // +追加のデバッグメッセージ
+        console.log("Ray direction:", raycaster.ray.direction); // +追加のデバッグメッセージ
 
-    // 地面との交差を計算
-    const intersects = raycaster.intersectObject(groundMesh);
-    console.log("Intersects:", intersects); // 追加のデバッグメッセージ
+        // 地面との交差を計算
+        const intersects = raycaster.intersectObject(groundMesh);
+        console.log("Intersects:", intersects); // 追加のデバッグメッセージ
 
-    if (intersects.length > 0) {
-        console.log("Ground clicked");  // +地面がクリックされたかを確認
-        // 交差位置にブロックを作成
-        const intersect = intersects[0];
-        const position = new THREE.Vector3(intersect.point.x, 100, intersect.point.z); // Y座標を100に固定
-        const { obj, mtl } = getRandomObjectUrl(); // ランダムなオブジェクトを選択
-        console.log("Loading object:", obj, mtl);  // +ロードするオブジェクトの情報を確認
-        loadOBJModel(obj, mtl, position);
+        if (intersects.length > 0) {
+            console.log("Ground clicked");  // +地面がクリックされたかを確認
+            // 交差位置にブロックを作成
+            const intersect = intersects[0];
+            const position = new THREE.Vector3(intersect.point.x, 10, intersect.point.z); // Y座標を固定
+            const { obj, mtl } = getRandomObjectUrl(); // ランダムなオブジェクトを選択
+            console.log("Loading object:", obj, mtl);  // +ロードするオブジェクトの情報を確認
+            loadOBJModel(obj, mtl, position);
+        }
+    } else if (currentState === 'MENU') {
+        console.log("Starting game from menu...");
+        // ゲームプレイ画面に移行
+        startGame();
     }
 }
 
@@ -302,23 +314,99 @@ function shouldDestroy(attrA, attrB) {
     return shouldDestroy;
 }
 
+// State management
+let currentState = 'MENU';
+
+// メニュー画面の関数
+function showMenu() {
+    console.log("Showing menu...");
+    // メニュー画面の表示を追加
+    // ここでメニューのHTML要素を表示したり、シーンを設定したりする
+
+    // タイトル画面を表示
+    const title = document.createElement('div');
+    title.style.position = 'absolute';
+    title.style.top = '50%';
+    title.style.left = '50%';
+    title.style.transform = 'translate(-50%, -50%)';
+    title.style.color = 'white';
+    title.style.fontSize = '24px';
+    title.style.fontFamily = 'Arial';
+    title.textContent = 'Click to start';
+    document.body.appendChild(title);
+}
+
+// ゲームプレイ画面の関数
+function startGame() {
+    console.log("Starting game...");
+    currentState = 'PLAYING';
+    // ゲームプレイの初期化
+
+    // title要素を削除
+    const title = document.querySelector('div');
+    if (title) {
+        title.remove();
+    }
+
+    // オブジェクトの生成や物理エンジンのリセットなどを行う
+}
+
+// ゲームクリア/オーバー画面の関数
+function showGameOver() {
+    console.log("Game over...");
+    currentState = 'GAME_OVER';
+    // ゲームクリア/オーバー画面の表示を追加
+    // ここで結果のHTML要素を表示したり、シーンを設定したりする
+
+    // ゲームオーバー画面を表示
+    const gameOver = document.createElement('div');
+    gameOver.style.position = 'absolute';
+    gameOver.style.top = '50%';
+    gameOver.style.left = '50%';
+    gameOver.style.transform = 'translate(-50%, -50%)';
+    gameOver.style.color = 'white';
+    gameOver.style.fontSize = '24px';
+    gameOver.style.fontFamily = 'Arial';
+    gameOver.textContent = 'Game over';
+    document.body.appendChild(gameOver);
+    
+}
+
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
 
-    // Update physics
-    world.step(1 / 60);
+    if (currentState === 'PLAYING') {
+        // Update physics
+        world.step(1 / 60);
 
-    // Sync Three.js and Cannon.js meshes
-    world.bodies.forEach(body => {
-        if (body.threeMesh) {
-            body.threeMesh.position.copy(body.position);
-            body.threeMesh.quaternion.copy(body.quaternion);
-        }
-    });
+        // Sync Three.js and Cannon.js meshes
+        world.bodies.forEach(body => {
+            if (body.threeMesh) {
+                body.threeMesh.position.copy(body.position);
+                body.threeMesh.quaternion.copy(body.quaternion);
+            }
+        });
+
+        // ゲームオーバー判定
+        world.bodies.forEach(body => {
+            if (body.threeMesh && body.threeMesh.userData.type === 'building') {
+                if (isBodyAtRest(body) && checkOverlap(body, lidMesh)) {
+                    showGameOver();
+                }
+            }
+        });
+    }
 
     controls.update();
     renderer.render(scene, camera);
+}
+
+// 衝突判定
+function checkOverlap(bodyA, meshB) {
+    const boxA = new THREE.Box3().setFromObject(bodyA.threeMesh);
+    const boxB = new THREE.Box3().setFromObject(meshB);
+    return boxA.intersectsBox(boxB);
 }
 
 // Set initial camera position
@@ -329,3 +417,6 @@ console.log("Camera position:", camera.position); // +追加のデバッグメ�
 
 // Start animation
 animate();
+
+// 初期状態のメニュー画面を表示
+showMenu();
