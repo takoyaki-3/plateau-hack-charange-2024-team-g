@@ -43,9 +43,21 @@ function loadAndRepeatCityModelGrid(objPath, startPosition, repeatX, repeatZ, di
                 object.position.set(posX, startPosition.y, posZ);
                 object.scale.set(10, 10, 10); // サイズ調整が必要な場合
                 scene.add(object);
+
+                // 以下で物理ボディを作成し、ワールドに追加
+                const box = new THREE.Box3().setFromObject(object);
+                const size = new THREE.Vector3();
+                box.getSize(size);
+                const halfExtents = new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2);
+                const boxBody = new CANNON.Body({
+                    mass: 0, // 重さ（0は動かない）
+                    position: new CANNON.Vec3(posX, startPosition.y, posZ),
+                    shape: new CANNON.Box(halfExtents)
+                });
+                world.addBody(boxBody);
             }
         }
-        console.log('City models added to the scene in a grid pattern on X and Z axes');
+        console.log('City models added to the scene in a grid pattern on X and Z axes with collision bodies.');
     });
 }
 
